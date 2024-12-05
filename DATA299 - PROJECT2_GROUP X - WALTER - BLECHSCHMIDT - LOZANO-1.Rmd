@@ -1,0 +1,290 @@
+---
+title: 'Spooning with Defects: Unpacking the Quality Issues of Goreos'
+subtitle: 'DATA299 Statistical Engineering - FA24 - Project 2'
+author: "Group 3: Graham Blechschmidt, Saul Lozano, Serenna Walter"
+output:
+  html_document:
+    toc: true         # Enables the Table of Contents
+    toc_depth: 2      # Controls depth of headings in the TOC
+    toc_float:        # Makes the TOC float on the left side
+      collapsed: false  # TOC will be expanded by default
+      smooth_scroll: true  # Adds smooth scrolling to section links
+    number_sections: true  # Enables numbered sections
+    theme: united     # Optional: Bootstrap theme for styling
+---
+
+<center>![](https://www.ussportscamps.com/media/legacy/willamettelogo.jpg){width="75"}</center>
+
+------------------------------------------------------------------------
+
+```{r setup, include=FALSE}
+#knitr::opts_knit$set(root.dir = "<C:\Users\seren\OneDrive\Documents\Willamette University\DATA 299 - Statistical Engineering\Projects\Project 2>")
+
+#setwd("C:\\Users\\seren\\OneDrive\\Documents\\Willamette University\\DATA 299 - Statistical Engineering\\Projects\\Project 2")
+
+library(tidyverse)
+library(broom)
+library(ggfortify)
+```
+
+# Introduction
+
+Goreos cereal was born in the late 1990s, thanks to the innovative mind of Dr. Gore, a food scientist with a mission to create a breakfast that felt both wholesome and fun. Dr. Gore was inspired by the golden fields near her family farm, where she spent her childhood summers helping with the beehives. Determined to capture the taste of those memories, she set out to create a honey-flavored cereal that would make mornings feel like sunshine in a bowl.
+
+After months of experimenting with different grains and natural honey, Dr. Gore perfected her recipe. The result was Goreos ---small, honey-coated O's with a light, crispy texture and a flavor that struck the perfect balance between sweet and satisfying. She debuted Goreos at a local farmer's market in 1978, and it was an instant success. Parents appreciated the wholesome, real honey flavor, while kids loved the crunchy texture and golden color.
+
+In the 1980s, Goreos began appearing on store shelves across the country, and the brand quickly became a household favorite. Each box carried the slogan "A Little Honey in Every Bite," and Dr. Gore became known as the "Honey Queen of Breakfast." Over the years, the brand stayed true to its original recipe, only adding variations like honey-cinnamon or honey-almond O's to keep fans excited.
+
+Today, Goreos remains a beloved classic, enjoyed by families for its simple, natural ingredients and golden honey flavor. It's a cereal that's as warm and inviting as the memories it creates.
+
+The purpose of this study was to identify the variation in the manufacturing process of Goreos and develop a way to minimize said variation. Data was collected for different variables of the samples and were used to create control charts to measure potential inconsistencies. This data was used to measure the stability of the manufacturing process and identify what changes could be made to improve stability of manufacturing.
+
+# Methodology
+
+There are multiple target values in the proposed observational study. While sampling, the goal was a 25 gram scoop of Goreos with specification limits allowing for 2 grams in either direction (23-27 grams scoop weights). Within this sample weight target, there was a target unit count of 50 units with a tolerance of 5 units in either direction (45-55 units per scoop). Then, overall, there was a goal that each sample had no more than 5% nonconformity of the units that comprised it.
+
+This observational study was completed via simple random sampling with replacement. The equipment included one box of Goreos, one scoop, and a scale. The population was one box of Goreos. Each operator would sample the population by scooping what they estimated to weigh 25 grams. Then, the scoops were measured for accuracy (how close it was to 25 grams within the hundredth place), and the contents were spread out and counted consistently by operators 1 and 2 to determine the sample size and the number of nonconforming units. This was consistent in reducing the error involved in varied interpretations of Goreo nonconformity. Following this, the units would be returned to the population. This process was continued so that each operator(three) would estimate ten scoops, resulting in 30 samples. 
+
+Replacement was necessary for the study for several reasons. Most importantly, it ensured that there would be an adequate amount of Goreos to be measured. Without replacement, there would be a time when the sample taken could not equal 25 grams, invalidating it. Another important factor would be how having conditional probability would impact sampling. For a box of Goreos, the units with the largest volume would remain around the top, while the smaller, nonconforming units would realistically be settled on the bottom. Given this, if there were no replacements within the sampling, as more units are sampled, there would be disproportionately larger nonconformity rates in the latter half of the sampling period. Therefore, it is necessary to include replacement. Ultimately, the replacement was necessary so each drawn sample would be pulled from the exact same population and therefore fall on a uniform distribution. Otherwise, the study would be susceptible to skew, and validity would be undermined.
+
+```         
+```
+
+# Control Charts
+
+## Weight of the Cereal Scoops
+
+```{r echo=FALSE}
+#-------------X Bar Chart---------------
+
+goreo = read_csv("goreos.csv")
+goreo = goreo %>%
+  mutate(sample = row_number(),prop_noncon = nonconforming/n_pieces)
+
+mean(goreo$n_pieces)
+mean(goreo$weight)
+
+xbar = mean(goreo$weight)
+
+the_sd = sd(goreo$weight)
+
+mean_n = mean(goreo$n_pieces)
+
+LCL=round(xbar-3*the_sd/sqrt(mean_n),1)
+UCL=round(xbar+3*the_sd/sqrt(mean_n),1)
+
+LSL = 23
+USL = 27
+	
+#Not faceted 
+goreo %>%
+  ggplot(aes(x = sample, y = weight)) +
+  geom_line(color="darkorange", linewidth=1.10) +
+			geom_hline(yintercept = xbar, linewidth=0.9, color="black") +
+			geom_hline(yintercept = c(LCL,UCL), linetype="dashed", linewidth=0.8, color="cyan4") +
+      geom_hline(yintercept = c(LSL,USL), linetype="dashed", linewidth=0.8, color="darkred") +
+  geom_hline(yintercept = 25, linewidth =.9, color = "darkorchid4" ) + 
+      labs(title = "Weight of the Sampled Units in Contrast to the Average Weight",subtitle = "X Bar", x = "Sample Number (Sample ID)", y = "Weight (Grams)") +
+  theme_bw()
+
+#Faceted 
+goreo %>%
+  ggplot(aes(x = sample, y = weight)) +
+  geom_line(color="darkorange", linewidth=1.10) +
+			geom_hline(yintercept = xbar, linewidth=0.9, color="black") +
+			geom_hline(yintercept = c(LCL,UCL), linetype="dashed", linewidth=0.8, color="cyan4") +
+      geom_hline(yintercept = c(LSL,USL), linetype="dashed", linewidth=0.8, color="darkred") +
+  geom_hline(yintercept = 25, linewidth =.9, color = "darkorchid4" ) + 
+      labs(title = "Weight of the Sampled Units in Contrast to the Average Weight by Operator",subtitle = "X Bar", x = "Sample Number (Sample ID)", y = "Weight (Grams)") +
+  facet_grid(.~operator) +
+  theme_bw()
+
+#--------------------Cp and Cpk-----------------------------
+ds=read_csv("goreos.csv")
+#ds
+
+#making samples 1-30 and not 1-10
+ds=ds %>% 
+  mutate(
+    sample=row_number()
+    )
+
+USL=27
+LSL=23
+#USL-LSL
+
+stdev= ds %>%
+    summarize(stdev=sd(weight)) %>% 
+    pull()
+#stdev
+  
+xbarbar=mean(ds$weight) #sample mean
+#xbarbar
+
+
+Cp=(USL-LSL)/(6*stdev)
+print("Cp Value")
+Cp
+
+Cpk_lower=(xbarbar-LSL)/(3*stdev)
+Cpk_upper=(USL-xbarbar)/(3*stdev)
+
+Cpk=min(Cpk_lower,Cpk_upper)
+print("Cpk Value")
+Cpk
+
+```
+
+The X Bar chart above expresses the weight of each sample in contrast to the overall mean and the associated spec and control limits. The red dotted lines represent the study's lower and upper spec limits, valued at 23 and 27 grams, respectively. The cyan dotted lines represent the lower and upper control limits of 23.6 and 24.8 grams, respectively. The solid purple line is the target value of 25 grams for the study samples. The solid black line is the calculated mean of all samples at 24.192 grams.
+
+Overall, the data was lower than the target average of 25 grams. There was a sizable amount of variation between the specific samples and the operators. Operator one had high variation but tended to have higher values. Operator two was the most consistent but still had most values below the target mean. Operator three had a large variation once again, with overall lower values.
+
+The Cp and Cpk values are 0.42 and 0.25 (rounded). These values are much below the target value of 1.3, meaning that the manufacturing process for Goreos is frequently outside the specification limits. The Cp and Cpk values also have a difference of 0.17. This means that our average weight per scoop (Xbar) had a significant difference from the target weight per scoop. This aligns with what is displayed on the graph as well.
+
+## Pieces per Scoop
+
+```{r echo=FALSE}
+#----------------U Chart------------------
+# u chart
+ds_pieces=read_csv("goreos.csv")
+
+ds_pieces=ds_pieces%>%
+  mutate(sample=row_number())
+
+ds_pieces_sum=ds_pieces%>%
+  summarize(ubar=mean(n_pieces),
+            LCL=ubar-3*sqrt(ubar/1),
+            UCL=ubar+3*sqrt(ubar/1))
+USL=45
+LSL=55
+LCL=ds_pieces_sum%>%pull(LCL)
+UCL=ds_pieces_sum%>%pull(UCL)
+ubar=ds_pieces_sum%>%pull(ubar)
+
+ds_pieces%>%
+  ggplot(aes(x=sample,y=n_pieces))+
+  geom_line(linewidth=1.1,color="darkorange")+
+  geom_hline(yintercept = ubar)+
+  geom_hline(yintercept = c(LSL,USL),linetype="dashed",linewidth=.9,color="darkred")+
+  geom_hline(yintercept = c(LCL,UCL),linetype="dashed",linewidth=.9,color="cyan4")+
+  geom_hline(yintercept = 50,color="darkorchid4")+
+  labs(x="Sample Number (Sample ID)",
+       y="Number of Pieces (Piece Units)") +
+  ggtitle(label="Number of Pieces Per Sample", subtitle="U Chart") +
+  theme_bw()
+
+ds_pieces%>%
+  ggplot(aes(x=sample,y=n_pieces))+
+  geom_line(linewidth=1.1,color="darkorange")+
+  geom_hline(yintercept = ubar)+
+  geom_hline(yintercept = c(LSL,USL),linetype="dashed",linewidth=.9,color="darkred")+
+  geom_hline(yintercept = c(LCL,UCL),linetype="dashed",linewidth=.9,color="cyan4")+
+  geom_hline(yintercept = 50,color="darkorchid4")+
+  labs(x="Sample Number (Sample ID)",
+       y="Number of Pieces (Piece Units)")+
+  ggtitle(label="Number of Pieces Per Sample by Operator", subtitle="U Chart") +
+  facet_grid(.~operator) +
+  theme_bw()
+
+```
+
+This chart displays that there was an operator difference. Samples from Operator 1 and Operator 2 were mostly greater than the average number of pieces per scoop, while samples from Operator 3 were mostly lesser than the average sample size. Only Operator 3 reported a single sample size within the spec limits, and Operator 2 reported the highest sample sizes. Operators 1 and 2 had a closer range to each other. Since Operator 3 had smaller sample sizes, none of the operators were centered around the average.
+
+All three operators varied greatly from sample to sample and were out of control and far away from the target size of 50 pieces per sample. 
+
+## Proportion Nonconforming Pieces Per Scoop
+
+```{r echo=FALSE}
+#--------------------P Chart-----------------------------
+
+ds=read_csv("goreos.csv")
+#ds
+
+#making samples 1-30 and not 1-10
+ds=ds %>% 
+  mutate(
+    sample=row_number()
+    )
+#ds
+
+#creating phat
+#nonconforming/n_pieces
+ds = ds %>% mutate(
+  phat=nonconforming/n_pieces
+)
+#ds
+
+#getting pooled_p
+pooled_p = ds %>% 
+  summarize(
+    p_tilde=sum(nonconforming)/sum(n_pieces)
+  ) %>% pull()
+#pooled_p
+
+#calculating control limits
+#find average n
+avg_n = floor(mean(ds$n_pieces))
+  #sum(ds$n_pieces)/30
+#avg_n
+
+LCL = pooled_p - 3*sqrt(pooled_p*(1-pooled_p)/avg_n)
+UCL = pooled_p + 3*sqrt(pooled_p*(1-pooled_p)/avg_n)
+#LCL
+#UCL
+
+#Spec limits
+LSL=0 #technically there isn't one
+USL=0.05
+
+#Making the p-chart - not faceted by operator 
+ds %>% ggplot(aes(x=sample, y=phat)) + 
+  geom_line(color="darkorange", linewidth=1.075) + 
+  geom_hline(yintercept=pooled_p, linewidth=1.075) +
+  geom_hline(yintercept=c(LCL, UCL), color="cyan4", linetype="dashed") + 
+  geom_hline(yintercept=USL, color="darkred", linetype="dashed") +
+  ggtitle(label="Proportion of Nonconforming Goreo Pieces Per Scoop", subtitle="P Chart") + 
+  xlab("Sample Number (Sample ID)") +
+  ylab("Sample Proportion (Percentage)") +
+  scale_y_continuous(labels=scales::percent_format()) +
+  theme_bw() 
+
+#Making the p chart - facet by operator 
+ds %>% ggplot(aes(x=sample, y=phat)) + 
+  geom_line(color="darkorange", linewidth=1.075) + 
+  geom_hline(yintercept=pooled_p, linewidth=1.075) +
+  geom_hline(yintercept=c(LCL, UCL), color="cyan4", linetype="dashed") + 
+  geom_hline(yintercept=USL, color="darkred", linetype="dashed") +
+  facet_grid(.~operator) +
+  ggtitle(label="Proportion of Nonconforming Goreo Pieces Per Scoop by Operator", subtitle="P Chart") + 
+  xlab("Sample Number (Sample ID)") +
+  ylab("Sample Proportion (Percentage)") +
+  scale_y_continuous(labels=scales::percent_format()) +
+  theme_bw() 
+
+```
+
+The P-Chart above displays the Proportion of Nonconforming Goreo Pieces Per Scoop, separated by the three different operators in the experiment. The orange line displays the percentage of nonconforming pieces per each sample scoop that an operator performed. The red dashed line displays the upper specification limit, which was 5%. The blue dashed line displays the upper and lower control limits, which were about 19% and 54%. The black line line represents the pooled proportion, which is the average percentage of nonconforming pieces per scoop. This pooled proportion is roughly 36%.
+
+The data from the different operators shows that there were slight changes in between operators. Operator 1 and 2 seem to be very similar. Operator 3, on the other hand, changed over time. Operator 3 seemed to get better at sampling as more samples were collected.
+
+# Process Evaluation and Improvement
+
+The X Bar chart displaying the weight of the sample units in contrast to the average weight showed an apparent operator and time effect. As seen in the chart, none of the operators were ultimately in control. Individual data points fell within the control limits, but there were never enough to define the process as in control. The data tended to cluster under the target value of 25 grams, but there were many points going past both the lower and upper control limits. Concerning the spec limits, there were many more data points for all the operators in this range, but all had at least one out of this range. Not only were the processes not in control, but they failed to meet the relaxed specification limits. As the process continued, there was some improvement. For Operators 1 and 2, as more sampling was completed, there were smaller residuals from the collected points to both the target value of 25 grams and the calculated X Bar at 24.192. This suggests that as this process continued, these operators got more accurate results. Unfortunately, this trend was not reflected in the data gathered by operator three. This operator had consistent variability in scoop weight.
+
+Customers of Goreos would be very displeased with having a product that was consistently under the weight they would expect to have. To address the issue of varied weight, using a weight metric would be very advantageous. The scoop measurements of this process were completed with no technological or metric assistance. The operator estimated the weight based on the volume collected in the scoop. Using even just a marked line, or preferably having a scoop that allowed for specifically 25 grams when filled, would enable there to be a more accurate and consistent measurement throughout the process. Such changes would reduce the impact of operators measuring discrepancies, ultimately leading to a rise in customer satisfaction.
+
+Considering the U Chart displaying the number of pieces per sample, there was an operator effect. Each of the operators had varying results from each other and strayed away from the spec limits. Aside from one sample, neither of the operators were within the specification limits. The average number of pieces per sample was 68.66, making it 13.66 above even the highest spec limit.The process did not improve as time went on throughout the observation. Sample sizes were consistently over the specification limits by a significant amount. The process did not show any signs of improvement throughout the observation either as all three operators were staying closer to the average than the specification limits. Only the third operator had a few samples closer to the specification limits but quickly returned to being further out of control.
+
+To address the issues of sample sizes being larger than the specification limits, the size of the pieces that count towards the size of each sample should be reconsidered. Pieces below a certain measurement should be void as it can result from operator error, such as a piece being turned into multiple smaller than normal pieces during the measurement and other processes. This will lead to sample sizes being reduced and being more centered around the target of 50 pieces and within the specification limits.
+
+Over all operators, the P Chart representing the proportion of nonconforming Goreo pieces per scoop shows that the manufacturing process for Goreos was in control among all operators, so the process is consistent. However, it was much too high above the upper specification limit, which was the maximum acceptable value for nonconforming pieces that was allowed in the product output. Since the data was so much higher over the upper specification limit, this means that the process was largely outside of the acceptable range for nonconforming pieces. 
+
+The P Chart displays that there was an operator and time effect. Operator 1 and Operator 2 were similar in consistency throughout each sample. They had a consistent range on nonconforming pieces per scoop. While there were jumps in percentage of nonconforming pieces between each sample, they tended to jump up and down consistently. However, Operator 3 was not consistent in the amount of nonconforming pieces per scoop and seemed to get better over time at having less nonconforming pieces. As time went on, the percentage of nonconforming pieces had an overall decrease. 
+
+The pooled proportion of nonconforming Goreos per scoop was around 36%, which is a very high percentage. Customers would be very disappointed to receive this amount of Goreos that did not look like the desired product. To address this issue, along with the operator differences in nonconforming pieces, adding an additional machine or additional operator that first sorted out all of the nonconforming pieces in a batch of Goreos would be helpful. If an operator or a machine sorted out the bad Goreo pieces, the batch would be “cleaned” before it arrived to the scooping operators.
+
+# Conclusion
+
+The results from this study revealed significant inconsistencies in the Goreo manufacturing process. The inconsistencies included issues with the weights of each sample, the number of pieces, and the excessive amount of nonconforming products. The sample weights frequently fell below the target weight of 25 grams and were inconsistent, signaling lack of control and unmet customer expectations for the weight of the Goreo package they will receive. Similarly, the scoop count per sample exceeded the specification limits, meaning that the Goreo pieces that customers received had a high likelihood of being too small. Additionally, excessive nonconforming pieces (with a high of 36%) suggest a need for a pre-sorting process to increase the quality of Goreo pieces that customers receive in a package. 
+
+Two follow-up studies would be beneficial to improving the manufacturing process of Goreos. Conducting a study that analyzed what volume of scoop would measure approximately 25 grams would aid in keeping each sample in control and within the specification limits. This would improve the chances that each operator would sample 25 grams per scoop. Another study which looked at the measurement of weight vs volume ratio of individual Goreo pieces would be helpful in looking at how Goreo pieces can be improved to be more uniform in size, therefore improving the consistency of number of pieces in each scoop sold to a customer.
